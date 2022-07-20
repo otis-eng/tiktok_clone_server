@@ -1,0 +1,9 @@
+{
+  "name": "Book_Gateway",
+  "version": "1.0.0",
+  "description": "Gateway websocket",
+  "main": "index.js",
+  "author": "otis",
+  "license": "MIT",
+  "private": true
+}
