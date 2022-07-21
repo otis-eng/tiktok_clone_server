@@ -8,9 +8,8 @@ const app = express();
 const wsServer = new ws.Server({ noServer: true, skipUTF8Validation: true });
 wsServer.on("connection", (socket) => {
   socket.on("message", (message) => {
-    const messages = JSON.parse(message);
-    console.log("message", messages);
-    socket.send("Oh hello connect" + message);
+    console.log("message", message.toString("utf8"));
+    socket.send("Oh hello connect" + message.toString("utf8"));
   });
   socket.send("Connect success");
 });
