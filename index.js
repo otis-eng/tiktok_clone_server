@@ -1,28 +1,45 @@
 const express = require("express");
 const ws = require("ws");
-
+const { SocketController } = require("./src/router");
 const app = express();
-
-// Set up a headless websocket server that prints any
-// events that come in.
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+dotenv.config();
 const wsServer = new ws.Server({ noServer: true, skipUTF8Validation: true });
-wsServer.on("connection", (socket) => {
-  socket.on("message", (message) => {
-    console.log("message", message.toString("utf8"));
-    socket.send("Oh hello connect" + message.toString("utf8"));
+
+wsServer.on("connection", (socket, req) => {
+  var id = req.headers["sec-websocket-key"];
+  if (id) socket["id"] = Date.now();
+  console.log("---->", socket.id);
+  // console.log("connection", socket);
+  // socket.send()
+  socket.on("message", async (message) => {
+    console.log("Message");
+    const data = message.toString("utf8");
+    const res = require("./response.example.json");
+    const response = await SocketController(data);
+    socket.emit("video", JSON.stringify(res));
   });
-  socket.send("Connect success");
+
+  // console.log("socket", socket.id);
+  // socket.emit("video", JSON.stringify(data));
+  const data = require("./response.example.json");
+  socket.send(JSON.stringify(data));
 });
 
-// `server` is a vanilla Node.js HTTP server, so use
-// the same ws upgrade process described here:
-// https://www.npmjs.com/package/ws#multiple-servers-sharing-a-single-https-server
-wsServer.on("open", function open() {
-  ws.send("something");
-});
-wsServer.on("message", (data) => {
-  console.log("received: %s", data);
-});
+// wsServer.on("open", function open() {
+//   console.log("open");
+//   ws.send("something");
+// });
+
+const dbURL = process.env.MONGODB_URL;
+mongoose
+  .connect(dbURL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then((_) => console.log("connect to database success!"))
+  .catch((err) => console.log(err));
 const server = app.listen(3000);
 
 server.on("upgrade", (request, socket, head) => {
@@ -30,5 +47,3 @@ server.on("upgrade", (request, socket, head) => {
     wsServer.emit("connection", socket, request);
   });
 });
-
-// const ws = new WebSocket("ws://www.host.com/path");
